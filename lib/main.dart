@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:leadflow/core/theme/app_theme.dart';
 import 'package:leadflow/features/leads/presentation/screens/manage_leads_screen.dart';
 
 void main() {
@@ -12,9 +13,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Leadflow',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueGrey),
-      ),
+      theme: AppTheme.darkTheme,
       home: const ManageLeadsScreen(),
     );
   }
