@@ -23,7 +23,10 @@ class _ManageLeadsScreenState extends State<ManageLeadsScreen> {
     return Scaffold(
       appBar: AppBar(
         leading: const Icon(Icons.account_circle_outlined),
-        title: const Text('Hi Shivam'),
+        title: Text(
+          'Hi Shivam',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
 
         actions: const [
           Icon(Icons.call),

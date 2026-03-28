@@ -6,21 +6,25 @@ class ManageLeadsHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Row(
         children: [
           //left section
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
+              children: [
                 Text(
                   'Manage Leads',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  style: Theme.of(context).textTheme.titleLarge,
                 ),
                 SizedBox(height: 10),
                 Text(
                   'manage all your leads under a single screen',
-                  style: TextStyle(color: Colors.grey),
+                  style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],
             ),

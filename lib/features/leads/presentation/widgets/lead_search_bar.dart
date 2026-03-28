@@ -21,10 +21,11 @@ class LeadSearchBar extends StatelessWidget {
         Expanded(
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.grey.shade100,
+              color: Theme.of(context).inputDecorationTheme.fillColor,
               borderRadius: BorderRadius.circular(12),
             ),
             child: TextField(
+              style: Theme.of(context).textTheme.bodyMedium,
               onChanged: onSearchChanged,
               controller: controller,
               decoration: InputDecoration(
@@ -40,25 +41,29 @@ class LeadSearchBar extends StatelessWidget {
         const SizedBox(width: 10),
 
         //saved filters
-        _iconButton(icon: Icons.bookmark_outline, onTap: onSavedTap),
+        _iconButton(context, icon: Icons.bookmark_outline, onTap: onSavedTap),
 
         const SizedBox(width: 10),
 
         //apply filters button
-        _iconButton(icon: Icons.filter_list, onTap: onFilterTap),
+        _iconButton(context, icon: Icons.filter_list, onTap: onFilterTap),
       ],
     );
   }
 
   //reusable icon button
-  Widget _iconButton({required IconData icon, required VoidCallback onTap}) {
+  Widget _iconButton(
+    BuildContext context, {
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(10),
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: Colors.grey.shade100,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(10),
         ),
         child: Icon(icon),
