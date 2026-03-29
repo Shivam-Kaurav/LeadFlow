@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:leadflow/features/leads/domain/entities/lead_entity.dart';
+import 'package:leadflow/features/leads/presentation/widgets/lead_card.dart';
 import 'package:leadflow/features/leads/presentation/widgets/lead_search_bar.dart';
+import 'package:leadflow/features/leads/presentation/widgets/leads_filter_tabs.dart';
 import 'package:leadflow/features/leads/presentation/widgets/manage_leads_header.dart';
 
 class ManageLeadsScreen extends StatefulWidget {
@@ -10,6 +13,18 @@ class ManageLeadsScreen extends StatefulWidget {
 }
 
 class _ManageLeadsScreenState extends State<ManageLeadsScreen> {
+  String selectedFilter = 'All';
+  List<Lead> allLeads = [
+    Lead(id: '1', name: 'Shivam', phone: '9999999999', status: 'Fresh'),
+    Lead(id: '2', name: 'Rahul', phone: '8888888888', status: 'Pending'),
+    Lead(id: '3', name: 'Amit', phone: '7777777777', status: 'Meeting'),
+  ];
+
+  List<Lead> get filteredLeads {
+    if (selectedFilter == 'All') return allLeads;
+    return allLeads.where((e) => e.status == selectedFilter).toList();
+  }
+
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -46,6 +61,31 @@ class _ManageLeadsScreenState extends State<ManageLeadsScreen> {
               onFilterTap: () {},
               onSearchChanged: (value) {},
               onSavedTap: () {},
+            ),
+            const SizedBox(height: 10),
+            LeadsFilterTabs(
+              filters: const [
+                'All',
+                'Fresh',
+                'Pending',
+                'Meeting',
+                'Site Visit',
+              ],
+              selected: selectedFilter,
+              onSelected: (value) {
+                setState(() {
+                  selectedFilter = value;
+                });
+              },
+            ),
+            const SizedBox(height: 10),
+            Expanded(
+              child: ListView.builder(
+                itemCount: filteredLeads.length,
+                itemBuilder: (context, index) {
+                  return LeadCard(lead: filteredLeads[index]);
+                },
+              ),
             ),
           ],
         ),
