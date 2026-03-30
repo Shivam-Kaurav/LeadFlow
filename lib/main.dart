@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:leadflow/core/theme/app_theme.dart';
+import 'package:leadflow/features/leads/presentation/bloc/leads_bloc.dart';
 import 'package:leadflow/features/leads/presentation/screens/manage_leads_screen.dart';
 
 void main() {
@@ -14,7 +16,10 @@ class MyApp extends StatelessWidget {
       title: 'Leadflow',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
-      home: const ManageLeadsScreen(),
+      home: BlocProvider(
+        create: (context) => LeadsBloc()..add(LoadLeadsEvent()),
+        child: ManageLeadsScreen(),
+      ),
     );
   }
 }
