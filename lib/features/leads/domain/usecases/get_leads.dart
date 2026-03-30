@@ -5,7 +5,7 @@ class GetLeads {
   final LeadRepository repository;
   GetLeads({required this.repository});
 
-  Future<List<Lead>> call(String status) {
-    return repository.getLeads(status);
+  Future<List<Lead>> call() async {
+    return await repository.getLeads();
   }
 }
