@@ -4,7 +4,7 @@ class Lead {
   final String phone;
   final String status;
 
-  Lead({
+  const Lead({
     required this.id,
     required this.name,
     required this.phone,

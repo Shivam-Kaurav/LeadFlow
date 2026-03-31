@@ -5,6 +5,10 @@ sealed class LeadsEvent {}
 
 class LoadLeadsEvent extends LeadsEvent {}
 
+class LoadMoreLeadsEvent extends LeadsEvent {}
+
+class RefreshLeadsEvent extends LeadsEvent {}
+
 class FilterLeadsEvent extends LeadsEvent {
   final String status;
   FilterLeadsEvent(this.status);

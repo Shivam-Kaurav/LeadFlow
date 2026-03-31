@@ -10,44 +10,116 @@ class LeadsBloc extends Bloc<LeadsEvent, LeadsState> {
   final GetLeads getLeads;
   LeadsBloc(this.getLeads) : super(LeadsInitial()) {
     on<LoadLeadsEvent>(_onLoadLeads);
+    on<LoadMoreLeadsEvent>(_onLoadMore);
+    on<RefreshLeadsEvent>(_onRefresh);
     on<FilterLeadsEvent>(_onFilterLeads);
     on<SearchLeadsEvent>(_onSearchLeads);
   }
-  List<Lead> leads = [];
+  List<Lead> allLeads = [];
+  List<Lead> filteredLeads = [];
 
-  void _onLoadLeads(LoadLeadsEvent event, Emitter<LeadsState> emit) async {
+  int currentPage = 1;
+  final int pageSize = 5;
+
+  String selectedFilter = 'All';
+  String searchQuery = '';
+
+  Future<void> _onLoadLeads(
+    LoadLeadsEvent event,
+    Emitter<LeadsState> emit,
+  ) async {
     emit(LeadsLoading());
 
     try {
-      leads = await getLeads();
-      emit(LeadsLoaded(leads: leads, selectedFilter: 'All'));
+      allLeads = await getLeads();
+      _applyFilters();
+
+      final paginated = filteredLeads.take(pageSize).toList();
+      emit(
+        LeadsLoaded(
+          leads: paginated,
+          hasMore: filteredLeads.length > pageSize,
+          isLoadingMore: false,
+          selectedFilter: 'All',
+        ),
+      );
     } catch (e) {
       emit(LeadsError('Failed to load leads'));
     }
   }
 
-  void _onFilterLeads(FilterLeadsEvent event, Emitter<LeadsState> emit) {
-    if (state is LeadsLoaded) {
-      final filtered = event.status == 'All'
-          ? leads
-          : leads.where((e) => e.status == event.status).toList();
-      emit(LeadsLoaded(leads: filtered, selectedFilter: event.status));
-    }
-  }
-
-  void _onSearchLeads(SearchLeadsEvent event, Emitter<LeadsState> emit) {
+  void _onLoadMore(LoadMoreLeadsEvent event, Emitter<LeadsState> emit) {
     final currentState = state;
 
     if (currentState is LeadsLoaded) {
-      final filtered = leads.where((lead) {
-        return lead.name.toLowerCase().contains(event.query.toLowerCase());
-      }).toList();
+      if (!currentState.hasMore || currentState.isLoadingMore) return;
+      emit(currentState.copyWith(isLoadingMore: true));
+      currentPage++;
+      final nextItems = filteredLeads.take(currentPage * pageSize).toList();
       emit(
-        LeadsLoaded(
-          leads: filtered,
-          selectedFilter: currentState.selectedFilter,
+        currentState.copyWith(
+          leads: nextItems,
+          hasMore: nextItems.length < filteredLeads.length,
+          isLoadingMore: false,
         ),
       );
     }
+  }
+
+  void _onFilterLeads(FilterLeadsEvent event, Emitter<LeadsState> emit) {
+    selectedFilter = event.status;
+    currentPage = 1;
+
+    _applyFilters();
+
+    final paginated = filteredLeads.take(pageSize).toList();
+
+    emit(
+      LeadsLoaded(
+        leads: paginated,
+        hasMore: filteredLeads.length > pageSize,
+        isLoadingMore: false,
+        selectedFilter: selectedFilter,
+      ),
+    );
+  }
+
+  Future<void> _onRefresh(
+    RefreshLeadsEvent event,
+    Emitter<LeadsState> emit,
+  ) async {
+    currentPage = 1;
+    add(LoadLeadsEvent());
+  }
+
+  void _onSearchLeads(SearchLeadsEvent event, Emitter<LeadsState> emit) {
+    searchQuery = event.query;
+    currentPage = 1;
+
+    _applyFilters();
+
+    final paginated = filteredLeads.take(pageSize).toList();
+
+    emit(
+      LeadsLoaded(
+        leads: paginated,
+        hasMore: filteredLeads.length > pageSize,
+        isLoadingMore: false,
+        selectedFilter: selectedFilter,
+      ),
+    );
+  }
+
+  void _applyFilters() {
+    filteredLeads = allLeads.where((lead) {
+      final matchesFilter =
+          selectedFilter == 'All' || lead.status == selectedFilter;
+
+      final matchesSearch = lead.name.toLowerCase().contains(
+        searchQuery.toLowerCase(),
+      );
+
+      return matchesFilter && matchesSearch;
+    }).toList();
   }
 }

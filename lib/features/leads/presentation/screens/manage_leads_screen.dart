@@ -15,6 +15,18 @@ class ManageLeadsScreen extends StatefulWidget {
 
 class _ManageLeadsScreenState extends State<ManageLeadsScreen> {
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollControler = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollControler.addListener(() {
+      if (_scrollControler.position.pixels >=
+          _scrollControler.position.maxScrollExtent - 200) {
+        context.read<LeadsBloc>().add(LoadMoreLeadsEvent());
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -81,12 +93,19 @@ class _ManageLeadsScreenState extends State<ManageLeadsScreen> {
                   if (state is LeadsLoading) {
                     return const Center(child: CircularProgressIndicator());
                   }
+
                   if (state is LeadsLoaded) {
-                    return ListView.builder(
-                      itemCount: state.leads.length,
-                      itemBuilder: (context, index) {
-                        return LeadCard(lead: state.leads[index]);
+                    return RefreshIndicator(
+                      onRefresh: () async {
+                        context.read<LeadsBloc>().add(RefreshLeadsEvent());
                       },
+                      child: ListView.builder(
+                        controller: _scrollControler,
+                        itemCount: state.leads.length,
+                        itemBuilder: (context, index) {
+                          return LeadCard(lead: state.leads[index]);
+                        },
+                      ),
                     );
                   }
                   if (state is LeadsError) {

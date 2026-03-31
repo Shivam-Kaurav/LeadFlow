@@ -9,8 +9,28 @@ final class LeadsLoading extends LeadsState {}
 
 final class LeadsLoaded extends LeadsState {
   final List<Lead> leads;
+  final bool hasMore;
+  final bool isLoadingMore;
   final String selectedFilter;
-  LeadsLoaded({required this.leads, required this.selectedFilter});
+  LeadsLoaded({
+    required this.leads,
+    required this.selectedFilter,
+    required this.hasMore,
+    required this.isLoadingMore,
+  });
+  LeadsLoaded copyWith({
+    List<Lead>? leads,
+    bool? hasMore,
+    bool? isLoadingMore,
+    String? selectedFilter,
+  }) {
+    return LeadsLoaded(
+      leads: leads ?? this.leads,
+      selectedFilter: selectedFilter ?? this.selectedFilter,
+      hasMore: hasMore ?? this.hasMore,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+    );
+  }
 }
 
 final class LeadsError extends LeadsState {
