@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:leadflow/features/leads/presentation/bloc/leads_bloc.dart';
 import 'package:leadflow/features/leads/presentation/widgets/lead_card.dart';
+import 'package:leadflow/features/leads/presentation/widgets/lead_card_shimmer.dart';
 import 'package:leadflow/features/leads/presentation/widgets/lead_search_bar.dart';
 import 'package:leadflow/features/leads/presentation/widgets/leads_filter_tabs.dart';
 import 'package:leadflow/features/leads/presentation/widgets/manage_leads_header.dart';
@@ -18,19 +19,9 @@ class _ManageLeadsScreenState extends State<ManageLeadsScreen> {
   final ScrollController _scrollControler = ScrollController();
 
   @override
-  void initState() {
-    super.initState();
-    _scrollControler.addListener(() {
-      if (_scrollControler.position.pixels >=
-          _scrollControler.position.maxScrollExtent - 200) {
-        context.read<LeadsBloc>().add(LoadMoreLeadsEvent());
-      }
-    });
-  }
-
-  @override
   void dispose() {
     _searchController.dispose();
+    _scrollControler.dispose();
     super.dispose();
   }
 
@@ -51,6 +42,7 @@ class _ManageLeadsScreenState extends State<ManageLeadsScreen> {
           SizedBox(width: 8),
         ],
       ),
+
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
@@ -101,9 +93,29 @@ class _ManageLeadsScreenState extends State<ManageLeadsScreen> {
                       },
                       child: ListView.builder(
                         controller: _scrollControler,
-                        itemCount: state.leads.length,
+                        physics: const AlwaysScrollableScrollPhysics(),
+
+                        itemCount:
+                            state.leads.length +
+                            (state.hasMore ? 3 : 1), // 👈 important
+
                         itemBuilder: (context, index) {
-                          return LeadCard(lead: state.leads[index]);
+                          /// ✅ NORMAL ITEMS
+                          if (index < state.leads.length) {
+                            return LeadCard(lead: state.leads[index]);
+                          }
+
+                          /// 🔥 PAGINATION TRIGGER (ONLY ON FIRST EXTRA ITEM)
+                          if (index == state.leads.length) {
+                            if (!state.isLoadingMore && state.hasMore) {
+                              context.read<LeadsBloc>().add(
+                                LoadMoreLeadsEvent(),
+                              );
+                            }
+                          }
+
+                          /// 🔥 SHIMMER ITEMS
+                          return const LeadCardShimmer();
                         },
                       ),
                     );

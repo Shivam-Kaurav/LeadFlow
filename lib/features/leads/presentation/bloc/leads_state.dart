@@ -12,12 +12,14 @@ final class LeadsLoaded extends LeadsState {
   final bool hasMore;
   final bool isLoadingMore;
   final String selectedFilter;
+
   LeadsLoaded({
     required this.leads,
     required this.selectedFilter,
     required this.hasMore,
     required this.isLoadingMore,
   });
+
   LeadsLoaded copyWith({
     List<Lead>? leads,
     bool? hasMore,

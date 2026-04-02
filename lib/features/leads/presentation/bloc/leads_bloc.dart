@@ -8,6 +8,7 @@ part 'leads_state.dart';
 
 class LeadsBloc extends Bloc<LeadsEvent, LeadsState> {
   final GetLeads getLeads;
+
   LeadsBloc(this.getLeads) : super(LeadsInitial()) {
     on<LoadLeadsEvent>(_onLoadLeads);
     on<LoadMoreLeadsEvent>(_onLoadMore);
@@ -15,6 +16,7 @@ class LeadsBloc extends Bloc<LeadsEvent, LeadsState> {
     on<FilterLeadsEvent>(_onFilterLeads);
     on<SearchLeadsEvent>(_onSearchLeads);
   }
+
   List<Lead> allLeads = [];
   List<Lead> filteredLeads = [];
 
@@ -24,6 +26,7 @@ class LeadsBloc extends Bloc<LeadsEvent, LeadsState> {
   String selectedFilter = 'All';
   String searchQuery = '';
 
+  /// 🔥 LOAD LEADS
   Future<void> _onLoadLeads(
     LoadLeadsEvent event,
     Emitter<LeadsState> emit,
@@ -32,15 +35,23 @@ class LeadsBloc extends Bloc<LeadsEvent, LeadsState> {
 
     try {
       allLeads = await getLeads();
+
+      /// 🔥 SIMULATE LARGE DATASET (IMPORTANT FOR PAGINATION)
+      allLeads = List.generate(
+        10,
+        (index) => allLeads,
+      ).expand((e) => e).toList();
+
       _applyFilters();
 
       final paginated = filteredLeads.take(pageSize).toList();
+
       emit(
         LeadsLoaded(
           leads: paginated,
-          hasMore: filteredLeads.length > pageSize,
+          hasMore: paginated.length < filteredLeads.length,
           isLoadingMore: false,
-          selectedFilter: 'All',
+          selectedFilter: selectedFilter,
         ),
       );
     } catch (e) {
@@ -48,14 +59,20 @@ class LeadsBloc extends Bloc<LeadsEvent, LeadsState> {
     }
   }
 
-  void _onLoadMore(LoadMoreLeadsEvent event, Emitter<LeadsState> emit) {
+  /// 🔥 LOAD MORE
+  void _onLoadMore(LoadMoreLeadsEvent event, Emitter<LeadsState> emit) async {
     final currentState = state;
 
     if (currentState is LeadsLoaded) {
       if (!currentState.hasMore || currentState.isLoadingMore) return;
+
       emit(currentState.copyWith(isLoadingMore: true));
+      await Future.delayed(const Duration(milliseconds: 800));
+
       currentPage++;
+
       final nextItems = filteredLeads.take(currentPage * pageSize).toList();
+
       emit(
         currentState.copyWith(
           leads: nextItems,
@@ -66,6 +83,16 @@ class LeadsBloc extends Bloc<LeadsEvent, LeadsState> {
     }
   }
 
+  /// 🔥 REFRESH
+  Future<void> _onRefresh(
+    RefreshLeadsEvent event,
+    Emitter<LeadsState> emit,
+  ) async {
+    currentPage = 1;
+    add(LoadLeadsEvent());
+  }
+
+  /// 🔥 FILTER
   void _onFilterLeads(FilterLeadsEvent event, Emitter<LeadsState> emit) {
     selectedFilter = event.status;
     currentPage = 1;
@@ -77,21 +104,14 @@ class LeadsBloc extends Bloc<LeadsEvent, LeadsState> {
     emit(
       LeadsLoaded(
         leads: paginated,
-        hasMore: filteredLeads.length > pageSize,
+        hasMore: paginated.length < filteredLeads.length,
         isLoadingMore: false,
         selectedFilter: selectedFilter,
       ),
     );
   }
 
-  Future<void> _onRefresh(
-    RefreshLeadsEvent event,
-    Emitter<LeadsState> emit,
-  ) async {
-    currentPage = 1;
-    add(LoadLeadsEvent());
-  }
-
+  /// 🔥 SEARCH
   void _onSearchLeads(SearchLeadsEvent event, Emitter<LeadsState> emit) {
     searchQuery = event.query;
     currentPage = 1;
@@ -103,13 +123,14 @@ class LeadsBloc extends Bloc<LeadsEvent, LeadsState> {
     emit(
       LeadsLoaded(
         leads: paginated,
-        hasMore: filteredLeads.length > pageSize,
+        hasMore: paginated.length < filteredLeads.length,
         isLoadingMore: false,
         selectedFilter: selectedFilter,
       ),
     );
   }
 
+  /// 🔥 CORE FILTER LOGIC
   void _applyFilters() {
     filteredLeads = allLeads.where((lead) {
       final matchesFilter =
