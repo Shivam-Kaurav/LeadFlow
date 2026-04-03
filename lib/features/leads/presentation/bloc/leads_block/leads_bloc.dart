@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:leadflow/features/leads/domain/entities/lead_entity.dart';
 import 'package:leadflow/features/leads/domain/usecases/get_leads.dart';
+import 'package:leadflow/features/leads/presentation/bloc/transformers/debounce.dart';
 
 part 'leads_event.dart';
 part 'leads_state.dart';
@@ -14,7 +15,10 @@ class LeadsBloc extends Bloc<LeadsEvent, LeadsState> {
     on<LoadMoreLeadsEvent>(_onLoadMore);
     on<RefreshLeadsEvent>(_onRefresh);
     on<FilterLeadsEvent>(_onFilterLeads);
-    on<SearchLeadsEvent>(_onSearchLeads);
+    on<SearchLeadsEvent>(
+      _onSearchLeads,
+      transformer: debounce(Duration(milliseconds: 500)),
+    );
   }
 
   List<Lead> allLeads = [];
@@ -112,9 +116,16 @@ class LeadsBloc extends Bloc<LeadsEvent, LeadsState> {
   }
 
   /// 🔥 SEARCH
-  void _onSearchLeads(SearchLeadsEvent event, Emitter<LeadsState> emit) {
+  Future<void> _onSearchLeads(
+    SearchLeadsEvent event,
+    Emitter<LeadsState> emit,
+  ) async {
+    print("🔥 API CALLED for query: ${event.query}");
+
+    if (event.query == searchQuery) return;
     searchQuery = event.query;
     currentPage = 1;
+    await Future.delayed(const Duration(milliseconds: 300));
 
     _applyFilters();
 

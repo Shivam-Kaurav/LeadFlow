@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:leadflow/features/leads/presentation/bloc/leads_bloc.dart';
+import 'package:leadflow/features/leads/presentation/bloc/leads_block/leads_bloc.dart';
 import 'package:leadflow/features/leads/presentation/widgets/lead_card.dart';
 import 'package:leadflow/features/leads/presentation/widgets/lead_card_shimmer.dart';
 import 'package:leadflow/features/leads/presentation/widgets/lead_search_bar.dart';
@@ -53,6 +53,8 @@ class _ManageLeadsScreenState extends State<ManageLeadsScreen> {
               controller: _searchController,
               onFilterTap: () {},
               onSearchChanged: (value) {
+                print(" UI EVENT: $value");
+
                 context.read<LeadsBloc>().add(SearchLeadsEvent(value));
               },
               onSavedTap: () {},
@@ -95,17 +97,15 @@ class _ManageLeadsScreenState extends State<ManageLeadsScreen> {
                         controller: _scrollControler,
                         physics: const AlwaysScrollableScrollPhysics(),
 
-                        itemCount:
-                            state.leads.length +
-                            (state.hasMore ? 3 : 1), // 👈 important
+                        itemCount: state.leads.length + (state.hasMore ? 3 : 1),
 
                         itemBuilder: (context, index) {
-                          /// ✅ NORMAL ITEMS
+                          ///  NORMAL ITEMS
                           if (index < state.leads.length) {
                             return LeadCard(lead: state.leads[index]);
                           }
 
-                          /// 🔥 PAGINATION TRIGGER (ONLY ON FIRST EXTRA ITEM)
+                          // PAGINATION TRIGGER (ONLY ON FIRST EXTRA ITEM)
                           if (index == state.leads.length) {
                             if (!state.isLoadingMore && state.hasMore) {
                               context.read<LeadsBloc>().add(

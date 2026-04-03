@@ -5,7 +5,7 @@ import 'package:leadflow/core/theme/app_theme.dart';
 import 'package:leadflow/features/leads/data/datasources/lead_remote_datasource.dart';
 import 'package:leadflow/features/leads/data/repositories/lead_repository_impl.dart';
 import 'package:leadflow/features/leads/domain/usecases/get_leads.dart';
-import 'package:leadflow/features/leads/presentation/bloc/leads_bloc.dart';
+import 'package:leadflow/features/leads/presentation/bloc/leads_block/leads_bloc.dart';
 import 'package:leadflow/features/leads/presentation/screens/manage_leads_screen.dart';
 
 void main() {
