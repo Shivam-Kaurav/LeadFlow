@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:leadflow/features/leads/domain/entities/lead_entity.dart';
+import 'package:leadflow/features/leads/domain/entities/lead_filter.dart';
 import 'package:leadflow/features/leads/domain/usecases/get_leads.dart';
 import 'package:leadflow/features/leads/presentation/bloc/transformers/debounce.dart';
 
@@ -15,6 +16,7 @@ class LeadsBloc extends Bloc<LeadsEvent, LeadsState> {
     on<LoadMoreLeadsEvent>(_onLoadMore);
     on<RefreshLeadsEvent>(_onRefresh);
     on<FilterLeadsEvent>(_onFilterLeads);
+    on<ApplyAdvancedFilterEvent>(_onApplyAdvancedFilter);
     on<SearchLeadsEvent>(
       _onSearchLeads,
       transformer: debounce(Duration(milliseconds: 500)),
@@ -22,6 +24,7 @@ class LeadsBloc extends Bloc<LeadsEvent, LeadsState> {
   }
 
   List<Lead> allLeads = [];
+  LeadFilter currentFilter = const LeadFilter();
   List<Lead> filteredLeads = [];
 
   int currentPage = 1;
@@ -30,7 +33,7 @@ class LeadsBloc extends Bloc<LeadsEvent, LeadsState> {
   String selectedFilter = 'All';
   String searchQuery = '';
 
-  /// 🔥 LOAD LEADS
+  ///  LOAD LEADS
   Future<void> _onLoadLeads(
     LoadLeadsEvent event,
     Emitter<LeadsState> emit,
@@ -40,7 +43,7 @@ class LeadsBloc extends Bloc<LeadsEvent, LeadsState> {
     try {
       allLeads = await getLeads();
 
-      /// 🔥 SIMULATE LARGE DATASET (IMPORTANT FOR PAGINATION)
+      ///  SIMULATE LARGE DATASET (IMPORTANT FOR PAGINATION)
       allLeads = List.generate(
         10,
         (index) => allLeads,
@@ -63,7 +66,7 @@ class LeadsBloc extends Bloc<LeadsEvent, LeadsState> {
     }
   }
 
-  /// 🔥 LOAD MORE
+  ///  LOAD MORE
   void _onLoadMore(LoadMoreLeadsEvent event, Emitter<LeadsState> emit) async {
     final currentState = state;
 
@@ -87,7 +90,7 @@ class LeadsBloc extends Bloc<LeadsEvent, LeadsState> {
     }
   }
 
-  /// 🔥 REFRESH
+  ///  REFRESH
   Future<void> _onRefresh(
     RefreshLeadsEvent event,
     Emitter<LeadsState> emit,
@@ -96,7 +99,7 @@ class LeadsBloc extends Bloc<LeadsEvent, LeadsState> {
     add(LoadLeadsEvent());
   }
 
-  /// 🔥 FILTER
+  ///  FILTER
   void _onFilterLeads(FilterLeadsEvent event, Emitter<LeadsState> emit) {
     selectedFilter = event.status;
     currentPage = 1;
@@ -120,8 +123,6 @@ class LeadsBloc extends Bloc<LeadsEvent, LeadsState> {
     SearchLeadsEvent event,
     Emitter<LeadsState> emit,
   ) async {
-    print("🔥 API CALLED for query: ${event.query}");
-
     if (event.query == searchQuery) return;
     searchQuery = event.query;
     currentPage = 1;
@@ -141,17 +142,57 @@ class LeadsBloc extends Bloc<LeadsEvent, LeadsState> {
     );
   }
 
+  void _onApplyAdvancedFilter(
+    ApplyAdvancedFilterEvent event,
+    Emitter<LeadsState> emit,
+  ) {
+    currentFilter = event.filter;
+    currentPage = 1;
+
+    _applyFilters();
+
+    final paginated = filteredLeads.take(pageSize).toList();
+
+    emit(
+      LeadsLoaded(
+        leads: paginated,
+        hasMore: paginated.length < filteredLeads.length,
+        isLoadingMore: false,
+        selectedFilter: selectedFilter,
+      ),
+    );
+  }
+
   /// 🔥 CORE FILTER LOGIC
   void _applyFilters() {
     filteredLeads = allLeads.where((lead) {
-      final matchesFilter =
-          selectedFilter == 'All' || lead.status == selectedFilter;
-
       final matchesSearch = lead.name.toLowerCase().contains(
         searchQuery.toLowerCase(),
       );
 
-      return matchesFilter && matchesSearch;
+      final matchesStatus =
+          currentFilter.statuses.isEmpty ||
+          currentFilter.statuses.contains(lead.status);
+
+      final matchesPriority =
+          currentFilter.priority == null ||
+          lead.priority == currentFilter.priority;
+
+      final matchesAssigned =
+          currentFilter.assignedUser == null ||
+          lead.assignedTo == currentFilter.assignedUser;
+
+      final matchesDate =
+          (currentFilter.startDate == null ||
+              !lead.createdAt.isBefore(currentFilter.startDate!)) &&
+          (currentFilter.endDate == null ||
+              !lead.createdAt.isAfter(currentFilter.endDate!));
+
+      return matchesSearch &&
+          matchesStatus &&
+          matchesPriority &&
+          matchesAssigned &&
+          matchesDate;
     }).toList();
   }
 }

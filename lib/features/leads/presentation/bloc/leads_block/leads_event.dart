@@ -18,3 +18,8 @@ class SearchLeadsEvent extends LeadsEvent {
   final String query;
   SearchLeadsEvent(this.query);
 }
+
+class ApplyAdvancedFilterEvent extends LeadsEvent {
+  final LeadFilter filter;
+  ApplyAdvancedFilterEvent(this.filter);
+}

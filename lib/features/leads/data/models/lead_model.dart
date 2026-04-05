@@ -6,6 +6,9 @@ class LeadModel extends Lead {
     required super.name,
     required super.phone,
     required super.status,
+    required super.priority,
+    required super.assignedTo,
+    required super.createdAt,
   });
 
   factory LeadModel.fromJson(Map<String, dynamic> json) {
@@ -14,20 +17,28 @@ class LeadModel extends Lead {
       name: json['name'] ?? '',
       phone: json['phone'] ?? '',
       status: _generateStatus(json['id']),
+      priority: _generatePriority(json['id']),
+      assignedTo: _generateUser(json['id']),
+      createdAt: _generateDate(json['id']),
     );
   }
 
-  Map<String, dynamic> toJson() {
-    return {'id': id, 'name': name, 'phone': phone, 'status': status};
+  static String _generateStatus(dynamic id) {
+    final list = ['Fresh', 'Pending', 'Meeting', 'Site Visit'];
+    return list[(id as int) % list.length];
   }
 
-  // Fake CRM Status
-  static String _generateStatus(dynamic id) {
-    final statuses = ['Fresh', 'Pending', 'Meeting', 'Site Visit'];
+  static String _generatePriority(dynamic id) {
+    final list = ['High', 'Medium', 'Low'];
+    return list[(id as int) % list.length];
+  }
 
-    final index =
-        (id is int ? id : int.tryParse(id.toString()) ?? 0) % statuses.length;
+  static String _generateUser(dynamic id) {
+    final list = ['Shivam', 'Rahul', 'Amit', 'Neha'];
+    return list[(id as int) % list.length];
+  }
 
-    return statuses[index];
+  static DateTime _generateDate(dynamic id) {
+    return DateTime.now().subtract(Duration(days: id % 30));
   }
 }

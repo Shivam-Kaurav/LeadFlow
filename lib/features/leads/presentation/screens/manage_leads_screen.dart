@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:leadflow/features/leads/presentation/bloc/leads_block/leads_bloc.dart';
+import 'package:leadflow/features/leads/presentation/screens/filter_bottom_sheet.dart';
 import 'package:leadflow/features/leads/presentation/widgets/lead_card.dart';
 import 'package:leadflow/features/leads/presentation/widgets/lead_card_shimmer.dart';
 import 'package:leadflow/features/leads/presentation/widgets/lead_search_bar.dart';
@@ -51,7 +52,17 @@ class _ManageLeadsScreenState extends State<ManageLeadsScreen> {
             const SizedBox(height: 10),
             LeadSearchBar(
               controller: _searchController,
-              onFilterTap: () {},
+              onFilterTap: () {
+                showModalBottomSheet(
+                  context: context,
+                  builder: (_) {
+                    return BlocProvider.value(
+                      value: context.read<LeadsBloc>(),
+                      child: const FilterBottomSheet(),
+                    );
+                  },
+                );
+              },
               onSearchChanged: (value) {
                 print(" UI EVENT: $value");
 
