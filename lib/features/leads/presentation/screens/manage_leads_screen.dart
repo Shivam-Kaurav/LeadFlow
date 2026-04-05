@@ -53,12 +53,14 @@ class _ManageLeadsScreenState extends State<ManageLeadsScreen> {
             LeadSearchBar(
               controller: _searchController,
               onFilterTap: () {
+                final currentFilter = context.read<LeadsBloc>().currentFilter;
+
                 showModalBottomSheet(
                   context: context,
                   builder: (_) {
                     return BlocProvider.value(
                       value: context.read<LeadsBloc>(),
-                      child: const FilterBottomSheet(),
+                      child: FilterBottomSheet(filter: currentFilter),
                     );
                   },
                 );

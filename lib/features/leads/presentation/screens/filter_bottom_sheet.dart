@@ -4,7 +4,8 @@ import 'package:leadflow/features/leads/domain/entities/lead_filter.dart';
 import 'package:leadflow/features/leads/presentation/bloc/leads_block/leads_bloc.dart';
 
 class FilterBottomSheet extends StatefulWidget {
-  const FilterBottomSheet({super.key});
+  final LeadFilter filter;
+  const FilterBottomSheet({super.key, required this.filter});
 
   @override
   State<FilterBottomSheet> createState() => _FilterBottomSheetState();
@@ -13,8 +14,9 @@ class FilterBottomSheet extends StatefulWidget {
 class _FilterBottomSheetState extends State<FilterBottomSheet> {
   DateTime? startDate;
   DateTime? endDate;
-  List<String> selectedStatuses = [];
+  late List<String> selectedStatuses;
   String? priority;
+
   Future<void> _pickDate(BuildContext context, bool isStart) async {
     final picked = await showDatePicker(
       context: context,
@@ -32,6 +34,16 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
         }
       });
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    //prefill from bloc
+    selectedStatuses = List.from(widget.filter.statuses);
+    priority = widget.filter.priority;
+    startDate = widget.filter.startDate;
+    endDate = widget.filter.endDate;
   }
 
   @override
@@ -103,20 +115,42 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
           ),
           const SizedBox(width: 10),
 
-          ElevatedButton(
-            onPressed: () {
-              final filter = LeadFilter(
-                statuses: selectedStatuses,
-                priority: priority,
-                startDate: startDate,
-                endDate: endDate,
-              );
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    selectedStatuses.clear();
+                    priority = null;
+                    startDate = null;
+                    endDate = null;
+                  });
 
-              context.read<LeadsBloc>().add(ApplyAdvancedFilterEvent(filter));
+                  context.read<LeadsBloc>().add(
+                    ApplyAdvancedFilterEvent(const LeadFilter()),
+                  );
+                },
+                child: const Text("Reset"),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  final filter = LeadFilter(
+                    statuses: selectedStatuses,
+                    priority: priority,
+                    startDate: startDate,
+                    endDate: endDate,
+                  );
 
-              Navigator.pop(context);
-            },
-            child: const Text("Apply Filters"),
+                  context.read<LeadsBloc>().add(
+                    ApplyAdvancedFilterEvent(filter),
+                  );
+
+                  Navigator.pop(context);
+                },
+                child: Text("Apply (${selectedStatuses.length}) Filters"),
+              ),
+            ],
           ),
         ],
       ),
